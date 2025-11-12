@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBBL Viva Preparation</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Load Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Load Custom Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen p-4 md:p-8">
+
+    <!-- Loading Overlay for PDF Generation -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 shadow-xl flex items-center space-x-4">
+            <svg class="animate-spin h-8 w-8 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-lg font-medium text-gray-700">Generating PDF...</span>
+        </div>
+    </div>
+
+
+    <!-- Main Application Container -->
+    <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+        
+        <!-- Header Section -->
+        <header class="bg-gradient-to-r from-teal-600 to-blue-600 text-white p-5 md:p-6 flex items-center justify-between space-x-4">
+            <!-- Left Side: Icon and Title -->
+            <div class="flex items-center space-x-4">
+                <!-- IBBL-like Icon -->
+                <svg class="w-10 h-10 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M3 10h18M5 6l7-4 7 4M10 10v11M14 10v11M5 21V10"></path>
+                </svg>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold">IBBL Viva Preparation</h1>
+                    <p class="text-sm md:text-base opacity-90">Islami Bank Bangladesh Ltd.</p>
+                </div>
+            </div>
+            <!-- Right Side: Navigation -->
+            <nav class="flex space-x-2">
+                <!-- Home Button -->
+                <button id="nav-home-btn" class="p-2 rounded-full text-white bg-white/30 hover:bg-white/40 transition-colors" aria-label="Home Page">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+                </button>
+                <!-- About Button -->
+                <button id="nav-about-btn" class="p-2 rounded-full text-white hover:bg-white/20 transition-colors" aria-label="About Page">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                </button>
+            </nav>
+        </header>
+
+        <!-- Home Page View (Q&A List) -->
+        <div id="home-view">
+            <!-- Search Bar Section -->
+            <div class="p-4 md:p-6 border-b border-gray-200">
+                <div class="relative">
+                    <!-- Search Icon -->
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text" id="searchInput" 
+                           placeholder="এখানে প্রশ্ন বা উত্তর খুঁজুন..." 
+                           class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-base">
+                </div>
+
+                <!-- PDF Generate Button -->
+                <div class="mt-4 flex justify-end">
+                    <button id="generate-pdf-btn" class="flex items-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-lg shadow-md hover:bg-teal-700 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Generate PDF</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Q&A List Container -->
+            <div id="qa-container" class="p-4 md:p-6 space-y-3 max-h-[55vh] md:max-h-[60vh] overflow-y-auto">
+                <!-- Q&A items will be dynamically inserted here by JavaScript -->
+                <p class="text-gray-500 text-center py-4">Loading questions...</p>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div id="pagination-container" class="flex justify-center items-center flex-wrap gap-2 p-4 border-t border-gray-200">
+                <!-- Pagination buttons will be inserted here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- About Page View (Hidden by default) -->
+        <div id="about-view" class="hidden">
+            <div class="p-6 md:p-8 space-y-4 text-gray-700">
+                <h2 class="text-2xl font-bold text-teal-600">সম্পর্কে</h2>
+                <p class="text-base leading-relaxed">
+                    এই অ্যাপটি ইসলামী ব্যাংক বাংলাদেশ লিমিটেড (IBBL)-এর ভাইভা পরীক্ষার প্রস্তুতির জন্য একটি সহায়িকা হিসেবে তৈরি করা হয়েছে। এখানে ভাইভা পরীক্ষার জন্য গুরুত্বপূর্ণ বিভিন্ন প্রশ্ন ও সেগুলোর নমুনা উত্তর সংগ্রহ করা হয়েছে।
+                </p>
+                <p class="text-base leading-relaxed">
+                    অ্যাপটির মূল উদ্দেশ্য হলো প্রার্থীদের একটি সংক্ষিপ্ত এবং গোছানো প্রস্তুতি নিতে সাহায্য করা। এখানে সাধারণ জ্ঞান, ইসলামী জ্ঞান, ব্যাংক সম্পর্কিত তথ্য এবং ভাইভা বোর্ডের সাধারণ প্রশ্নাবলি অন্তর্ভুক্ত করা হয়েছে।
+                </p>
+                <p class="font-semibold text-gray-800">
+                    সকলের জন্য শুভকামনা!
+                </p>
+                <div class="pt-4 text-sm text-gray-500 border-t border-gray-200 mt-4">
+                    <strong>বিশেষ দ্রষ্টব্য:</strong> এখানে প্রদত্ত উত্তরগুলি শুধুমাত্র নমুনা হিসেবে গণ্য করা উচিত। প্রার্থীদের নিজ নিজ জ্ঞান ও পরিস্থিতি অনুযায়ী উত্তর দেওয়ার জন্য উৎসাহিত করা হচ্ছে।
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Footer -->
+        <footer class="text-center p-4 text-gray-500 text-sm bg-gray-50 rounded-b-xl">
+            <p>&copy; 2025 Viva Prep Tool. Good luck!</p>
+        </footer>
+
+    </div>
+
+    <!-- Load Application Logic -->
+    <script src="script.js"></script>
+</body>
+</html>

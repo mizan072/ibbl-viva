@@ -1,0 +1,85 @@
+/* Use a clean, modern font */
+body {
+    font-family: 'Hind Siliguri', sans-serif;
+}
+
+/* This class ensures that newlines in the answer text are respected */
+.qa-answer p {
+    white-space: pre-line;
+}
+
+/* Smooth transition for the chevron icon rotation */
+.chevron-icon {
+    transition: transform 0.3s ease;
+}
+
+/* Class to rotate the icon 180 degrees */
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+/* Custom scrollbar for aesthetics */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #9ca3af; /* gray-400 */
+    border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+    background-color: #f3f4f6; /* gray-100 */
+}
+
+/* Styles for the hidden PDF content. This is what jspdf will "see" */
+/* This is styled for A4 paper dimensions (210mm wide) */
+#pdf-content {
+    width: 210mm; 
+    padding: 20mm;
+    color: #1f2937; /* gray-800 */
+    font-family: 'Hind Siliguri', sans-serif;
+    box-sizing: border-box;
+    background: #fff;
+}
+#pdf-content h1 {
+    font-size: 24pt;
+    font-weight: 700;
+    color: #0d9488; /* teal-600 */
+}
+#pdf-content h2 {
+    font-size: 18pt;
+    font-weight: 600;
+    color: #1f2937;
+    border-bottom: 2px solid #e5e7eb; /* gray-200 */
+    padding-bottom: 8px;
+    margin-top: 12px;
+}
+#pdf-content .pdf-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+}
+#pdf-content .pdf-header svg {
+    width: 50px;
+    height: 50px;
+    margin-right: 16px;
+}
+#pdf-content .pdf-qa-item {
+    margin-top: 16px;
+    page-break-inside: avoid; /* Try to keep Q&A together */
+}
+#pdf-content .pdf-question {
+    font-size: 14pt;
+    font-weight: 600;
+    color: #111827; /* gray-900 */
+}
+#pdf-content .pdf-answer {
+    font-size: 12pt;
+    font-weight: 400;
+    color: #374151; /* gray-700 */
+    white-space: pre-line; /* Respect newlines */
+    padding-left: 16px;
+    border-left: 3px solid #0d9488; /* teal-600 */
+    margin-top: 8px;
+}
