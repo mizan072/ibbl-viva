@@ -20,6 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PDF Elements ---
     const pdfButton = document.getElementById('generate-pdf-btn');
     const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingPercentage = document.getElementById('loading-percentage');
+    const cancelPdfButton = document.getElementById('cancel-pdf-btn');
+
+    let isPdfCancelled = false;
 
     /**
      * Renders the Q&A items for the *current* page.
@@ -204,8 +208,25 @@ document.addEventListener('DOMContentLoaded', () => {
      * Generates a PDF of the currently filtered data.
      */
     async function generatePdf() {
-        // 1. Show loading overlay
+        // 1. Show loading overlay and reset state
         loadingOverlay.classList.remove('hidden');
+        isPdfCancelled = false;
+        loadingPercentage.innerText = '0%';
+
+        // Helper to update progress
+        const updateProgress = (percent) => {
+             loadingPercentage.innerText = `${percent}%`;
+        };
+
+        // Simulated progress timer
+        let simulatedProgress = 0;
+        const progressInterval = setInterval(() => {
+            if (simulatedProgress < 90) {
+                simulatedProgress += Math.floor(Math.random() * 5) + 1;
+                if (simulatedProgress > 90) simulatedProgress = 90;
+                updateProgress(simulatedProgress);
+            }
+        }, 300);
 
         try {
             // Load libraries if not already loaded
@@ -215,6 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof window.jspdf === 'undefined') {
                  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
             }
+
+            if (isPdfCancelled) throw new Error("Cancelled");
 
             // 2. Create a hidden element to render all items for the PDF
             const pdfContent = document.createElement('div');
@@ -229,7 +252,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M3 10h18M5 6l7-4 7 4M10 10v11M14 10v11M5 21V10"></path>
             </svg>`;
 
+            // Added styling for answer alignment
+            const styleBlock = `
+                <style>
+                    .pdf-answer {
+                        text-align: justify;
+                        line-height: 1.6;
+                        margin-top: 10px;
+                    }
+                    .pdf-qa-item {
+                        margin-bottom: 20px;
+                        padding: 10px;
+                    }
+                </style>
+            `;
+
             let pdfHtml = `
+                ${styleBlock}
                 <div class="pdf-header">
                     ${logoSvg}
                     <div>
@@ -256,12 +295,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             pdfContent.innerHTML = pdfHtml;
 
+            if (isPdfCancelled) throw new Error("Cancelled");
+
             // 4. Use html2canvas to capture the *entire* hidden div
             const canvas = await html2canvas(pdfContent, {
                 scale: 2, // Higher scale for better quality
                 useCORS: true,
                 logging: false
             });
+
+            if (isPdfCancelled) throw new Error("Cancelled");
 
             // 5. Use jsPDF to create the multi-page PDF
             const { jsPDF } = window.jspdf;
@@ -284,24 +327,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 heightLeft -= pdfHeight;
             }
 
-            // Add Footer Note to Every Page
+            // Clean up the footer area and Add Footer Note to Every Page
             const totalPages = pdf.getNumberOfPages();
             for (let i = 1; i <= totalPages; i++) {
                 pdf.setPage(i);
+
+                // Mask the footer area with a white rectangle to prevent text overlap
+                pdf.setFillColor(255, 255, 255);
+                pdf.rect(0, pdfHeight - 20, pdfWidth, 20, 'F');
+
+                // Add footer text
                 pdf.setFontSize(8);
                 pdf.setTextColor(100, 100, 100);
                 pdf.text("pdf generate from https://ibbl-viva.pages.dev/", 10, pdfHeight - 10);
             }
 
+            updateProgress(100);
+            clearInterval(progressInterval);
+
+            if (isPdfCancelled) throw new Error("Cancelled");
+
             // 6. Save the PDF
             pdf.save('IBBL_Viva_Prep.pdf');
 
         } catch (error) {
-            console.error("Error generating PDF:", error);
-            qaContainer.innerHTML = `<p class="text-red-600 text-center py-4">Error generating PDF. Please try again.</p>`;
+            if (error.message !== "Cancelled") {
+                console.error("Error generating PDF:", error);
+                qaContainer.innerHTML = `<p class="text-red-600 text-center py-4">Error generating PDF. Please try again.</p>`;
+            } else {
+                console.log("PDF generation cancelled.");
+            }
         } finally {
+            clearInterval(progressInterval);
             // 7. Clean up
-            if (document.body.contains(pdfContent)) {
+            const pdfContent = document.getElementById('pdf-content');
+            if (pdfContent && document.body.contains(pdfContent)) {
                 document.body.removeChild(pdfContent);
             }
             // Use setTimeout to ensure the UI update (hiding overlay) happens after the save dialog
@@ -310,6 +370,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500);
         }
     }
+
+    // Cancel Button Event Listener
+    cancelPdfButton.addEventListener('click', () => {
+        isPdfCancelled = true;
+        loadingOverlay.classList.add('hidden');
+    });
 
     /**
      * Main function to fetch data and initialize the app.
