@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const qaContainer = document.getElementById('qa-container');
     const paginationContainer = document.getElementById('pagination-container');
-    
+
     // --- Navigation Elements ---
     const navHomeBtn = document.getElementById('nav-home-btn');
     const navAboutBtn = document.getElementById('nav-about-btn');
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const itemEl = document.createElement('div');
             itemEl.className = 'qa-item bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow duration-300 hover:shadow-md';
-            
+
             const answerId = `answer-${item.id}`;
             const questionId = `question-${item.id}`;
 
@@ -157,20 +157,20 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function filterData(filter = '') {
         const lowerCaseFilter = filter.toLowerCase();
-        
+
         // Filter from the master 'allQaData' list
         currentFilteredData = allQaData.filter(item =>
             item.question.toLowerCase().includes(lowerCaseFilter) ||
             (item.answer && item.answer.toLowerCase().includes(lowerCaseFilter))
         );
-        
+
         currentPage = 1; // Reset to page 1
         renderPage();
         renderPagination();
     }
 
     // --- Navigation Logic ---
-    
+
     function showHome() {
         homeView.classList.remove('hidden');
         aboutView.classList.add('hidden');
@@ -186,26 +186,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Helper function to load a script dynamically.
+     * @param {string} src - The URL of the script to load.
+     * @returns {Promise} - Resolves when the script is loaded.
+     */
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    /**
      * Generates a PDF of the currently filtered data.
      */
     async function generatePdf() {
         // 1. Show loading overlay
         loadingOverlay.classList.remove('hidden');
 
-        // 2. Create a hidden element to render all items for the PDF
-        const pdfContent = document.createElement('div');
-        pdfContent.id = "pdf-content";
-        pdfContent.style.position = "absolute";
-        pdfContent.style.left = "-9999px";
-        pdfContent.style.top = "0";
-        document.body.appendChild(pdfContent);
-
         try {
+            // Load libraries if not already loaded
+            if (typeof html2canvas === 'undefined') {
+                 await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+            }
+            if (typeof window.jspdf === 'undefined') {
+                 await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+            }
+
+            // 2. Create a hidden element to render all items for the PDF
+            const pdfContent = document.createElement('div');
+            pdfContent.id = "pdf-content";
+            pdfContent.style.position = "absolute";
+            pdfContent.style.left = "-9999px";
+            pdfContent.style.top = "0";
+            document.body.appendChild(pdfContent);
+
             // 3. Build the HTML for the PDF
             const logoSvg = `<svg class="w-10 h-10 md:w-12 md:h-12" fill="none" stroke="#0d9488" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M3 10h18M5 6l7-4 7 4M10 10v11M14 10v11M5 21V10"></path>
             </svg>`;
-            
+
             let pdfHtml = `
                 <div class="pdf-header">
                     ${logoSvg}
@@ -242,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 5. Use jsPDF to create the multi-page PDF
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
-            
+
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
             const imgWidth = pdfWidth;
@@ -268,8 +291,10 @@ document.addEventListener('DOMContentLoaded', () => {
             qaContainer.innerHTML = `<p class="text-red-600 text-center py-4">Error generating PDF. Please try again.</p>`;
         } finally {
             // 7. Clean up
+            if (document.body.contains(pdfContent)) {
+                document.body.removeChild(pdfContent);
+            }
             loadingOverlay.classList.add('hidden');
-            document.body.removeChild(pdfContent);
         }
     }
 
@@ -279,13 +304,13 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initializeApp() {
         try {
             // Fetch the external JSON file
-            const response = await fetch('ibbl-viva-pre.json');
+            const response = await fetch('ibbl-viva.json');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             allQaData = await response.json(); // Store data
             currentFilteredData = allQaData; // Set initial filter state
-            
+
             filterData(''); // Trigger the first render
         } catch (error) {
             console.error('Error fetching Q&A data:', error);
@@ -293,12 +318,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Helper Functions ---
+
+    /**
+     * Debounce function to limit the rate at which a function can fire.
+     * @param {Function} func - The function to debounce.
+     * @param {number} wait - The delay in milliseconds.
+     * @returns {Function} - The debounced function.
+     */
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+
     // --- Attach Event Listeners ---
 
     // 1. Search input
-    searchInput.addEventListener('input', (e) => {
+    searchInput.addEventListener('input', debounce((e) => {
         filterData(e.target.value);
-    });
+    }, 300));
 
     // 2. Accordion click (using event delegation)
     qaContainer.addEventListener('click', (e) => {
