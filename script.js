@@ -236,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h1 style="font-size: 24pt; font-weight: 700; color: #0d9488;">IBBL Viva Preparation</h1>
                         <p style="font-size: 12pt; color: #374151;">Islami Bank Bangladesh Ltd.</p>
                         <p style="font-size: 10pt; color: #6b7280;">40 Dilkusha C/A, Dhaka-1000, Bangladesh</p>
+                        <p style="font-size: 10pt; color: #0d9488; margin-top: 4px;">https://ibbl-viva.pages.dev/</p>
                     </div>
                 </div>
                 <h2>All Questions & Answers</h2>
@@ -283,6 +284,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 heightLeft -= pdfHeight;
             }
 
+            // Add Footer Note to Every Page
+            const totalPages = pdf.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(8);
+                pdf.setTextColor(100, 100, 100);
+                pdf.text("pdf generate from https://ibbl-viva.pages.dev/", 10, pdfHeight - 10);
+            }
+
             // 6. Save the PDF
             pdf.save('IBBL_Viva_Prep.pdf');
 
@@ -294,7 +304,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (document.body.contains(pdfContent)) {
                 document.body.removeChild(pdfContent);
             }
-            loadingOverlay.classList.add('hidden');
+            // Use setTimeout to ensure the UI update (hiding overlay) happens after the save dialog
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+            }, 500);
         }
     }
 
